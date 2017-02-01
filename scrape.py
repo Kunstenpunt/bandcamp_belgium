@@ -22,7 +22,7 @@ def parse_release(url):
         title = soup.find("h2", attrs={"class": "trackTitle"}).contents[0].strip()
         artist = soup.find("span", attrs={"itemprop": "byArtist"}).a.contents[0].strip()
         releasedate_str = soup.find("meta", attrs={"itemprop": "datePublished"})["content"]
-        releasedate = str(datetime(int(releasedate_str[0:4]), int(releasedate_str[4:6]), int(releasedate_str[6:8])).date())
+        releasedate = datetime(int(releasedate_str[0:4]), int(releasedate_str[4:6]), int(releasedate_str[6:8])).date()
         formats_raw = soup.findAll("li", attrs={"class": "buyItem"})
         label = get_label(soup)
         if len(soup.find("span", attrs={"class": "location"}).contents) > 0:
@@ -95,5 +95,5 @@ for start_url in start_urls:
             ignore_list.append(stad)
             print(stad, "added to ignore list")
 
-data.to_excel("data.xlsx")
-DataFrame(diff).to_excel("diff_" + datetime.now().isoformat() + ".xlsx")
+data.drop_duplicates().to_excel("data.xlsx")
+DataFrame(diff).drop_duplicates().to_excel("diff_" + datetime.now().isoformat() + ".xlsx")
