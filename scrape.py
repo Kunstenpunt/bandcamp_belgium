@@ -85,7 +85,7 @@ for start_url in start_urls:
                                     line = release_info.copy()
                                     line.pop("formats")
                                     line["format"] = format
-                                    data.append(DataFrame([line]))
+                                    data = data.append(DataFrame([line]))
                                     diff.append(line)
                                     print(release_info["artist"], release_info["title"], format, len(diff), len(data.index))
             else:
