@@ -15,6 +15,13 @@ def get_label(soup):
         return releaser if artist.lower() != releaser.lower() else None
 
 
+def get_tags(soup):
+    tags = []
+    for tag in soup.findAll("a", attrs={"class": "tag"}):
+        tags.append(tag.contents[0])
+    return tags
+
+
 def parse_release(url):
     release_request = get(url)
     soup = BeautifulSoup(release_request.text, "html.parser")
@@ -25,6 +32,7 @@ def parse_release(url):
         releasedate = datetime(int(releasedate_str[0:4]), int(releasedate_str[4:6]), int(releasedate_str[6:8])).date()
         formats_raw = soup.findAll("li", attrs={"class": "buyItem"})
         label = get_label(soup)
+        tags = get_tags(soup)
         if len(soup.find("span", attrs={"class": "location"}).contents) > 0:
             location = soup.find("span", attrs={"class": "location"}).contents[0].strip()
             formats = []
@@ -39,6 +47,7 @@ def parse_release(url):
                 "date": releasedate,
                 "url": url,
                 "formats": formats,
+                "tags": tags,
                 "location": location,
                 "label": label
             }
@@ -82,12 +91,15 @@ for start_url in start_urls:
                             artist_location_matches_cities = release_info["location"].lower() in cities
                             if artist_location_in_belgium or artist_location_matches_cities:
                                 for format in release_info["formats"]:
-                                    line = release_info.copy()
-                                    line.pop("formats")
-                                    line["format"] = format
-                                    data = data.append(DataFrame([line]))
-                                    diff.append(line)
-                                    print(release_info["artist"], release_info["title"], format, len(diff), len(data.index))
+                                    for tag in release_info["tags"]:
+                                        line = release_info.copy()
+                                        line.pop("formats")
+                                        line["format"] = format
+                                        line.pop("tags")
+                                        line["tag"] = tag
+                                        data = data.append(DataFrame([line]))
+                                        diff.append(line)
+                                        print(release_info["artist"], release_info["title"], format, len(diff), len(data.index))
             else:
                 ignore_list.append(stad)
                 print(stad, "added to ignore list")
