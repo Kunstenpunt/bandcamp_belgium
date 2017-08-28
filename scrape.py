@@ -1,8 +1,10 @@
-from requests import get
+from requests import get, exceptions
 from bs4 import BeautifulSoup
 from datetime import datetime
 from pandas import DataFrame, read_excel
 from time import sleep
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
 
 
 def get_label(soup):
@@ -22,9 +24,17 @@ def get_tags(soup):
     return tags
 
 
+def get_soup(url):
+    try:
+        release_request = get(url)
+        return BeautifulSoup(release_request.text, "html.parser")
+    except exceptions.ConnectionError:
+        sleep(5.0)
+        return get_soup(url)
+
+
 def parse_release(url):
-    release_request = get(url)
-    soup = BeautifulSoup(release_request.text, "html.parser")
+    soup = get_soup(url)
     if soup.find("h2", attrs={"class": "trackTitle"}):
         title = soup.find("h2", attrs={"class": "trackTitle"}).contents[0].strip()
         artist = soup.find("span", attrs={"itemprop": "byArtist"}).a.contents[0].strip()
@@ -107,5 +117,17 @@ for start_url in start_urls:
             ignore_list.append(stad)
             print(stad, "added to ignore list")
 
-data.drop_duplicates().to_excel("data.xlsx")
-DataFrame(diff).drop_duplicates().to_excel("diff_" + datetime.now().isoformat() + ".xlsx")
+data.drop_duplicates().to_excel("data.xlsx", index=False)
+filename = "diff_" + str(datetime.now().date()) + ".xlsx"
+DataFrame(diff).drop("tag", 1).drop_duplicates().to_excel(filename, index=False)
+
+gauth = GoogleAuth()
+gauth.LoadCredentialsFile("credentials.json")
+gauth.SaveCredentialsFile("credentials.json")
+
+drive = GoogleDrive(gauth)
+
+file1 = drive.CreateFile({'title': filename})
+file1.SetContentFile(filename)
+file1['parents'] = [{"kind": "drive#fileLink", "id": '0Bwt5PkSA_lHNNEtxdmRFQThCbGc'}]
+file1.Upload()
