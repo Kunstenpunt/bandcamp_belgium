@@ -131,3 +131,8 @@ file1 = drive.CreateFile({'title': filename})
 file1.SetContentFile(filename)
 file1['parents'] = [{"kind": "drive#fileLink", "id": '0Bwt5PkSA_lHNNEtxdmRFQThCbGc'}]
 file1.Upload()
+
+file2 = drive.CreateFile({'title': 'data.xlsx'})
+file2.SetContentFile('data.xlsx')
+file2['parents'] = [{"kind": "drive#fileLink", "id": '0Bwt5PkSA_lHNNEtxdmRFQThCbGc'}]
+file2.Upload()
